@@ -7,10 +7,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterator, Iterable
 
-from api import GlobalEntryApi
-from logger import setup_logger
-from translators import parse_datetime
-from common_types import Slot
+from global_entry_appointment_notifier.api import GlobalEntryApi
+from global_entry_appointment_notifier.logger import setup_logger
+from global_entry_appointment_notifier.translators import parse_datetime
+from global_entry_appointment_notifier.common_types import Slot
 
 
 setup_logger(os.environ.get("LOGLEVEL", "ERROR").upper())

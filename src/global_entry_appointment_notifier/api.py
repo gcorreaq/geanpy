@@ -2,8 +2,8 @@ import logging
 
 from typing import Iterable
 
-from translators import transform_available_slots
-from common_types import ApiAvailableSlot, Slot
+from global_entry_appointment_notifier.translators import transform_available_slots
+from global_entry_appointment_notifier.common_types import ApiAvailableSlot, Slot
 
 import requests
 
