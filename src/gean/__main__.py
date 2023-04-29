@@ -7,17 +7,17 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterator, Iterable
 
-from global_entry_appointment_notifier.api import GlobalEntryApi
-from global_entry_appointment_notifier.logger import setup_logger
-from global_entry_appointment_notifier.translators import parse_datetime
-from global_entry_appointment_notifier.common_types import Slot
+from gean.api import GlobalEntryApi
+from gean.logger import setup_logger
+from gean.translators import parse_datetime
+from gean.common_types import Slot
 
 
 setup_logger(os.environ.get("LOGLEVEL", "ERROR").upper())
 
 
 def _load_locations() -> Any:
-    with open(Path("global_entry_appointment_notifier/locations.json"), "r") as f_obj:
+    with open(Path("gean/locations.json"), "r") as f_obj:
         locations_list = json.load(f_obj)
 
     return {str(location_data["id"]): location_data for location_data in locations_list}
