@@ -2,8 +2,8 @@ import logging
 
 from typing import Iterable
 
-from global_entry_appointment_notifier.translators import transform_available_slots
-from global_entry_appointment_notifier.common_types import ApiAvailableSlot, Slot
+from gean.translators import transform_available_slots
+from gean.common_types import ApiAvailableSlot, Slot
 
 import requests
 

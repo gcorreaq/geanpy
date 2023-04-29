@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Iterable, Iterator
 
-from global_entry_appointment_notifier.common_types import ApiAvailableSlot, Slot
+from gean.common_types import ApiAvailableSlot, Slot
 
 
 def transform_available_slots(available_slots: Iterable[ApiAvailableSlot]) -> Iterator[Slot]:
