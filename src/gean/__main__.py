@@ -9,6 +9,7 @@ from typing import Any, Iterator, Iterable
 
 from gean.api import GlobalEntryApi
 from gean.logger import setup_logger
+from gean.notifier import notify
 from gean.translators import parse_datetime
 from gean.common_types import Slot
 
@@ -47,12 +48,22 @@ def process_locations(location_ids: list[str], before_datetime: datetime | None)
         )
         available_dates_count = len(available_dates)
         logging.debug("Found %d available slots", available_dates_count)
+        location_name = LOCATIONS_BY_ID[location_id]["shortName"]
         if available_dates_count > 0:
             # JACKPOT!
             logging.info(
                 "There's %d appointment(s) available at %s",
                 available_dates_count,
-                LOCATIONS_BY_ID[location_id]["shortName"],
+                location_name,
+            )
+            notify(
+                title="GEAN: Appointments Available! 🎉",
+                text=f"There's {available_dates_count} appointment(s) available at {location_name}",
+            )
+        else:
+            notify(
+                title="GEAN: No Appointments Available 🥲",
+                text=f"No appointments available at {location_name}",
             )
 
 
