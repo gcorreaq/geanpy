@@ -5,12 +5,12 @@ import os
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterator, NamedTuple, Iterable
-from typing_extensions import TypedDict
+from typing import Any, Iterator, Iterable
 
-import requests
-
+from api import GlobalEntryApi
 from logger import setup_logger
+from translators import parse_datetime
+from common_types import Slot
 
 
 setup_logger(os.environ.get("LOGLEVEL", "ERROR").upper())
@@ -24,51 +24,6 @@ def _load_locations() -> Any:
 
 
 LOCATIONS_BY_ID = _load_locations()
-BASE_URL = "https://ttp.cbp.dhs.gov/schedulerapi/slot-availability"
-
-
-ApiAvailableSlot = TypedDict(
-    "ApiAvailableSlot",
-    {
-        # The ID of the location where the interview is available at
-        "locationId": int,
-        # Start time of the appointment (2023-12-19T10:30)
-        "startTimestamp": str,
-        # End time of the appointment (2023-12-19T10:45)
-        "endTimestamp": str,
-        # ???
-        "active": bool,
-        # Duration of the appointment. Seems to be in minutes
-        "duration": int,
-        # ???
-        "remoteInd": bool,
-    },
-)
-
-
-Slot = NamedTuple(
-    "Slot",
-    [
-        ("location_id", int),
-        ("start_timestamp", datetime),
-        ("end_timestamp", datetime),
-        ("active", bool),
-        ("duration", int),
-        ("remote_ind", bool),
-    ],
-)
-
-
-class GlobalEntryApi:
-    session: requests.Session
-
-    def __init__(self) -> None:
-        self.session = requests.Session()
-
-    def get_location_response(self, location: str) -> requests.Response:
-        response = self.session.get(BASE_URL, params={"locationId": location})
-        response.raise_for_status()
-        return response
 
 
 def get_availability_dates(
@@ -83,36 +38,10 @@ def get_availability_dates(
         yield slot.start_timestamp
 
 
-def parse_datetime(datetime_string: str) -> datetime:
-    return datetime.strptime(datetime_string, "%Y-%m-%dT%H:%M")
-
-
-def transform_available_slots(available_slots: Iterable[ApiAvailableSlot]) -> Iterator[Slot]:
-    for slot in available_slots:
-        yield Slot(
-            location_id=slot["locationId"],
-            start_timestamp=parse_datetime(slot["startTimestamp"]),
-            end_timestamp=parse_datetime(slot["endTimestamp"]),
-            active=slot["active"],
-            duration=slot["duration"],
-            remote_ind=slot["remoteInd"],
-        )
-
-
 def process_locations(location_ids: list[str], before_datetime: datetime | None):
     api = GlobalEntryApi()
     for location_id in location_ids:
-        try:
-            response = api.get_location_response(location=location_id)
-        except requests.HTTPError:
-            logging.exception("Something went really wrong! We keep going though")
-            continue
-        else:
-            logging.debug("Response status from API: %s", response.status_code)
-
-        data = response.json()
-        api_available_slots: list[ApiAvailableSlot] = data.get("availableSlots")
-        available_slots = transform_available_slots(api_available_slots)
+        available_slots = api.get_appointment_slots(location_id=location_id)
         available_dates = list(
             get_availability_dates(available_slots, before_datetime=before_datetime)
         )
