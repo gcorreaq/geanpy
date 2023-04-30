@@ -1,4 +1,6 @@
-# GEANpy: Global Entry Appointment Notifier
+# GEANpy: Global Entry Appointment Notifier (in Python)
+
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
 
 This little Python 3.11 script allows you to see when there's open appointment slots for a given location. You can check a list of all locations in the `src/geanpy/locations.json` file (check the last updated date in the Git history)
 
