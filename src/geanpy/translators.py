@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Iterable, Iterator
 
-from gean.common_types import ApiAvailableSlot, Slot
+from geanpy.common_types import ApiAvailableSlot, Slot
 
 
 def transform_available_slots(available_slots: Iterable[ApiAvailableSlot]) -> Iterator[Slot]:
