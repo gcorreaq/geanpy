@@ -103,12 +103,13 @@ if __name__ == "__main__":
     You can add the flag multiple times with different location IDs"""
     parser.add_argument(
         "--locations",
+        "-l",
         action="append",
         help=locations_help_str,
         required=True,
     )
     parser.add_argument(
-        "--before-datetime", help="Only alert for appointments before this date and time"
+        "--before-datetime", "-b", help="Only alert for appointments before this date and time"
     )
     args = parser.parse_args()
     location_ids_set = set(args.locations)
