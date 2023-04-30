@@ -7,11 +7,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterator, Iterable
 
-from gean.api import GlobalEntryApi
-from gean.logger import setup_logger
-from gean.notifier import notify
-from gean.translators import parse_datetime
-from gean.common_types import Slot
+from geanpy.api import GlobalEntryApi
+from geanpy.logger import setup_logger
+from geanpy.notifier import notify
+from geanpy.translators import parse_datetime
+from geanpy.common_types import Slot
 
 
 setup_logger(os.environ.get("LOGLEVEL", "ERROR").upper())

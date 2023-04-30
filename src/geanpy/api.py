@@ -2,8 +2,8 @@ import logging
 
 from typing import Iterable
 
-from gean.translators import transform_available_slots
-from gean.common_types import ApiAvailableSlot, Slot
+from geanpy.translators import transform_available_slots
+from geanpy.common_types import ApiAvailableSlot, Slot
 
 import requests
 
