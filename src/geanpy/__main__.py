@@ -42,7 +42,7 @@ def get_availability_dates(
         yield slot.start_timestamp
 
 
-def process_locations(location_ids: list[str], before_datetime: datetime | None):
+def process_locations(location_ids: Iterable[str], before_datetime: datetime | None):
     api = GlobalEntryApi()
     for location_id in location_ids:
         available_slots = api.get_appointment_slots(location_id=location_id)
@@ -70,7 +70,7 @@ def process_locations(location_ids: list[str], before_datetime: datetime | None)
             )
 
 
-def validate_locations(location_ids: list[str]):
+def validate_locations(location_ids: Iterable[str]):
     logging.debug("Validatig locations: %s", location_ids)
     for location_id in location_ids:
         if location_id not in LOCATIONS_BY_ID:
@@ -78,7 +78,7 @@ def validate_locations(location_ids: list[str]):
     logging.debug("All location IDs are valid: %s", location_ids)
 
 
-def main(location_ids: list[str], before_datetime_str: str | None):
+def main(location_ids: Iterable[str], before_datetime_str: str | None):
     logging.debug(
         "Processing locations: %s",
         {LOCATIONS_BY_ID[location_id]["shortName"]: location_id for location_id in location_ids},
@@ -99,17 +99,20 @@ if __name__ == "__main__":
         description="Check for Global Entry appointment availability",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
+    locations_help_str = """The location(s) to check for.
+    You can add the flag multiple times with different location IDs"""
     parser.add_argument(
         "--locations",
         action="append",
-        help="The location(s) to check for",
+        help=locations_help_str,
         required=True,
     )
     parser.add_argument(
         "--before-datetime", help="Only alert for appointments before this date and time"
     )
     args = parser.parse_args()
+    location_ids_set = set(args.locations)
 
-    validate_locations(args.locations)
+    validate_locations(location_ids=location_ids_set)
 
-    main(args.locations, args.before_datetime)
+    main(location_ids=location_ids_set, before_datetime_str=args.before_datetime)
