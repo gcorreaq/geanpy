@@ -18,7 +18,10 @@ setup_logger(os.environ.get("LOGLEVEL", "ERROR").upper())
 
 
 def _load_locations() -> Any:
-    with open(Path("gean/locations.json"), "r") as f_obj:
+    # To consistently resolve the path to this JSON file, the best approach is to
+    # always resolve the absolute path of the parent folder of the current file
+    # Taken from https://stackoverflow.com/a/3430395
+    with open(Path(__file__).parent.resolve() / Path("locations.json"), "r") as f_obj:
         locations_list = json.load(f_obj)
 
     return {str(location_data["id"]): location_data for location_data in locations_list}
