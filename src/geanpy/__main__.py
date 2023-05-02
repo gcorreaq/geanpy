@@ -14,7 +14,7 @@ from geanpy.translators import parse_datetime
 from geanpy.common_types import Slot
 
 
-setup_logger(os.environ.get("LOGLEVEL", "ERROR").upper())
+setup_logger(os.environ.get("LOGLEVEL", "INFO").upper())
 
 
 def _load_locations() -> Any:
@@ -64,6 +64,7 @@ def process_locations(location_ids: Iterable[str], before_datetime: datetime | N
                 text=f"There's {available_dates_count} appointment(s) available at {location_name}",
             )
         else:
+            logging.info("There's no appointments available at %s", location_name)
             notify(
                 title="GEAN: No Appointments Available 🥲",
                 text=f"No appointments available at {location_name}",
@@ -79,15 +80,15 @@ def validate_locations(location_ids: Iterable[str]):
 
 
 def main(location_ids: Iterable[str], before_datetime_str: str | None):
-    logging.debug(
+    logging.info(
         "Processing locations: %s",
-        {LOCATIONS_BY_ID[location_id]["shortName"]: location_id for location_id in location_ids},
+        ", ".join(LOCATIONS_BY_ID[location_id]["shortName"] for location_id in location_ids),
     )
     if before_datetime_str is not None:
         before_datetime = parse_datetime(before_datetime_str)
-        logging.debug(
-            "Only looking for interviews before %r",
-            before_datetime,
+        logging.info(
+            "Only looking for interviews before %s",
+            before_datetime.strftime("%Y-%m-%d %H:%M"),
         )
     else:
         before_datetime = None
