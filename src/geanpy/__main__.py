@@ -8,10 +8,10 @@ from pathlib import Path
 from typing import Any, Iterator, Iterable
 
 from geanpy.api import GlobalEntryApi
+from geanpy.input_processing import parse_datetime_filters
 from geanpy.logger import setup_logger
 from geanpy.notifier import notify
-from geanpy.translators import parse_datetime
-from geanpy.common_types import Slot
+from geanpy.common_types import DateTimeFilters, Slot
 
 
 setup_logger(os.environ.get("LOGLEVEL", "INFO").upper())
@@ -30,26 +30,31 @@ def _load_locations() -> Any:
 LOCATIONS_BY_ID = _load_locations()
 
 
-def get_availability_dates(
-    slots: Iterable[Slot], before_datetime: datetime | None
-) -> Iterator[datetime]:
-    final_slots = slots
-    if before_datetime:
-        final_slots = (slot for slot in final_slots if slot.start_timestamp < before_datetime)
-
-    for slot in final_slots:
-        logging.info("=> Slot available at %s", slot.start_timestamp)
+def get_availability_dates(slots: Iterable[Slot]) -> Iterator[datetime]:
+    for slot in slots:
         yield slot.start_timestamp
 
 
-def process_locations(location_ids: Iterable[str], before_datetime: datetime | None):
+def filter_dates(
+    datetimes: Iterable[datetime], datetime_filters: DateTimeFilters
+) -> Iterator[datetime]:
+    for target_datetime in datetimes:
+        if datetime_filters.is_datetime_in_range(
+            target_datetime
+        ) and datetime_filters.is_time_in_range(target_datetime):
+            logging.info("=> Slot available at %s", target_datetime)
+            yield target_datetime
+        else:
+            logging.info("=> Slot on %s is not a candidate", target_datetime)
+
+
+def process_locations(location_ids: Iterable[str], datetime_filters: DateTimeFilters):
     api = GlobalEntryApi()
     for location_id in location_ids:
         available_slots = api.get_appointment_slots(location_id=location_id)
-        available_dates = list(
-            get_availability_dates(available_slots, before_datetime=before_datetime)
-        )
-        available_dates_count = len(available_dates)
+        available_dates = get_availability_dates(available_slots)
+        filtered_available_dates = list(filter_dates(available_dates, datetime_filters))
+        available_dates_count = len(filtered_available_dates)
         logging.debug("Found %d available slots", available_dates_count)
         location_name = LOCATIONS_BY_ID[location_id]["shortName"]
         if available_dates_count > 0:
@@ -79,20 +84,17 @@ def validate_locations(location_ids: Iterable[str]):
     logging.debug("All location IDs are valid: %s", location_ids)
 
 
-def main(location_ids: Iterable[str], before_datetime_str: str | None):
+def main(location_ids: Iterable[str], datetime_filters: DateTimeFilters):
     logging.info(
         "Processing locations: %s",
         ", ".join(LOCATIONS_BY_ID[location_id]["shortName"] for location_id in location_ids),
     )
-    if before_datetime_str is not None:
-        before_datetime = parse_datetime(before_datetime_str)
+    if datetime_filters.any_filters_set:
         logging.info(
-            "Only looking for interviews before %s",
-            before_datetime.strftime("%Y-%m-%d %H:%M"),
+            "Only looking for interviews in range %s",
+            datetime_filters,
         )
-    else:
-        before_datetime = None
-    process_locations(location_ids=location_ids, before_datetime=before_datetime)
+    process_locations(location_ids=location_ids, datetime_filters=datetime_filters)
 
 
 if __name__ == "__main__":
@@ -109,12 +111,26 @@ if __name__ == "__main__":
         help=locations_help_str,
         required=True,
     )
-    parser.add_argument(
-        "--before-datetime", "-b", help="Only alert for appointments before this date and time"
+    before_datetime_group = parser.add_mutually_exclusive_group()
+    before_datetime_group.add_argument(
+        "--before-datetime", help="Only alert for appointments before this date and time"
+    )
+    before_datetime_group.add_argument(
+        "--before-time",
+        help="Only alert for appoints before this time",
+    )
+    after_datetime_group = parser.add_mutually_exclusive_group()
+    after_datetime_group.add_argument(
+        "--after-datetime", help="Only alert for appointments after this date and time"
+    )
+    after_datetime_group.add_argument(
+        "--after-time",
+        help="Only alert for appoints after this time",
     )
     args = parser.parse_args()
     location_ids_set = set(args.locations)
 
     validate_locations(location_ids=location_ids_set)
+    datetime_filters = parse_datetime_filters(args)
 
-    main(location_ids=location_ids_set, before_datetime_str=args.before_datetime)
+    main(location_ids=location_ids_set, datetime_filters=datetime_filters)

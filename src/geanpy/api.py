@@ -33,4 +33,6 @@ class GlobalEntryApi:
 
         data = response.json()
         api_available_slots: list[ApiAvailableSlot] = data.get("availableSlots")
+        logging.debug("Got %d slots from API", len(api_available_slots))
+        logging.debug("availableSlots from API response: %r", api_available_slots)
         return transform_available_slots(api_available_slots)
