@@ -14,7 +14,7 @@ from geanpy.translators import parse_datetime
 from geanpy.common_types import Slot
 
 
-setup_logger(os.environ.get("LOGLEVEL", "ERROR").upper())
+setup_logger(os.environ.get("LOGLEVEL", "INFO").upper())
 
 
 def _load_locations() -> Any:
