@@ -7,6 +7,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterator, Iterable
 
+import arrow
+
 from geanpy.api import GlobalEntryApi
 from geanpy.input_processing import parse_datetime_filters
 from geanpy.logger import setup_logger
@@ -39,13 +41,11 @@ def filter_dates(
     datetimes: Iterable[datetime], datetime_filters: DateTimeFilters
 ) -> Iterator[datetime]:
     for target_datetime in datetimes:
-        if datetime_filters.is_datetime_in_range(
-            target_datetime
-        ) and datetime_filters.is_time_in_range(target_datetime):
+        if datetime_filters.is_datetime_in_range(target_datetime=target_datetime):
             logging.info("=> Slot available at %s", target_datetime)
             yield target_datetime
         else:
-            logging.info("=> Slot on %s is not a candidate", target_datetime)
+            logging.debug("=> Slot on %s is not a candidate", target_datetime)
 
 
 def process_locations(location_ids: Iterable[str], datetime_filters: DateTimeFilters):
@@ -70,10 +70,10 @@ def process_locations(location_ids: Iterable[str], datetime_filters: DateTimeFil
             )
         else:
             logging.info("There's no appointments available at %s", location_name)
-            notify(
-                title="GEAN: No Appointments Available 🥲",
-                text=f"No appointments available at {location_name}",
-            )
+            # notify(
+            #     title="GEAN: No Appointments Available 🥲",
+            #     text=f"No appointments available at {location_name}",
+            # )
 
 
 def validate_locations(location_ids: Iterable[str]):
@@ -91,7 +91,7 @@ def main(location_ids: Iterable[str], datetime_filters: DateTimeFilters):
     )
     if datetime_filters.any_filters_set:
         logging.info(
-            "Only looking for interviews in range %s",
+            "Only looking for interviews in range: %s",
             datetime_filters,
         )
     process_locations(location_ids=location_ids, datetime_filters=datetime_filters)
@@ -111,22 +111,45 @@ if __name__ == "__main__":
         help=locations_help_str,
         required=True,
     )
-    before_datetime_group = parser.add_mutually_exclusive_group()
-    before_datetime_group.add_argument(
-        "--before-datetime", help="Only alert for appointments before this date and time"
+    datetime_group = parser.add_argument_group(
+        title="Date and time filters",
+        description="Filters for finding appointments before, after or between two date-times",
     )
-    before_datetime_group.add_argument(
+    datetime_group.add_argument(
+        "--before-datetime",
+        help="Only alert for appointments before this date and time",
+    )
+    datetime_group.add_argument(
+        "--after-datetime",
+        help="Only alert for appointments after this date and time",
+    )
+
+    time_group = parser.add_argument_group(
+        title="Time filters",
+        description="Filters for finding appointments on any day before, after or between two given times",
+    )
+    time_group.add_argument(
         "--before-time",
-        help="Only alert for appoints before this time",
+        help="Alert for appointments on any day before this time",
     )
-    after_datetime_group = parser.add_mutually_exclusive_group()
-    after_datetime_group.add_argument(
-        "--after-datetime", help="Only alert for appointments after this date and time"
-    )
-    after_datetime_group.add_argument(
+    time_group.add_argument(
         "--after-time",
-        help="Only alert for appoints after this time",
+        help="Alert for appointments on any day after this time",
     )
+
+    date_group = parser.add_argument_group(
+        title="Date fitlers",
+        description="Filters for finding appointments before, after or between two given dates",
+    )
+    date_group.add_argument(
+        "--before-date",
+        help="Alert for appointments on any day before this date",
+    )
+    date_group.add_argument(
+        "--after-date",
+        help="Alert for appointments on any day after this date",
+    )
+
     args = parser.parse_args()
     location_ids_set = set(args.locations)
 
