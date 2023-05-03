@@ -5,6 +5,8 @@ from datetime import datetime, time
 from typing import Optional
 from typing_extensions import NamedTuple, TypedDict
 
+import arrow
+
 
 ApiAvailableSlot = TypedDict(
     "ApiAvailableSlot",
@@ -28,8 +30,8 @@ Slot = NamedTuple(
     "Slot",
     [
         ("location_id", int),
-        ("start_timestamp", datetime),
-        ("end_timestamp", datetime),
+        ("start_timestamp", arrow.Arrow),
+        ("end_timestamp", arrow.Arrow),
         ("active", bool),
         ("duration", int),
         ("remote_ind", bool),
@@ -39,10 +41,10 @@ Slot = NamedTuple(
 
 @dataclass
 class DateTimeFilters:
-    before_datetime: Optional[datetime]
-    after_datetime: Optional[datetime]
-    before_date: Optional[datetime]
-    after_date: Optional[datetime]
+    before_datetime: Optional[arrow.Arrow]
+    after_datetime: Optional[arrow.Arrow]
+    before_date: Optional[arrow.Arrow]
+    after_date: Optional[arrow.Arrow]
     before_time: Optional[time]
     after_time: Optional[time]
 

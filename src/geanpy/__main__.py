@@ -118,10 +118,11 @@ if __name__ == "__main__":
     datetime_group.add_argument(
         "--before-datetime",
         help="Only alert for appointments before this date and time",
+        type=arrow.get,
     )
     datetime_group.add_argument(
-        "--after-datetime",
-        help="Only alert for appointments after this date and time",
+        "--after-datetime", help="Only alert for appointments after this date and time",
+        type=arrow.get,
     )
 
     time_group = parser.add_argument_group(
@@ -131,10 +132,12 @@ if __name__ == "__main__":
     time_group.add_argument(
         "--before-time",
         help="Alert for appointments on any day before this time",
+        type=lambda x: arrow.get(x, 'HH:mm'),
     )
     time_group.add_argument(
         "--after-time",
         help="Alert for appointments on any day after this time",
+        type=lambda x: arrow.get(x, 'HH:mm'),
     )
 
     date_group = parser.add_argument_group(
@@ -144,10 +147,12 @@ if __name__ == "__main__":
     date_group.add_argument(
         "--before-date",
         help="Alert for appointments on any day before this date",
+        type=arrow.get,
     )
     date_group.add_argument(
         "--after-date",
         help="Alert for appointments on any day after this date",
+        type=arrow.get,
     )
 
     args = parser.parse_args()
